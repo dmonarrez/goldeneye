@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="container">
+    <div class="starter-template">
+	 <div class="row">
+	 
+	 <!-- button code -->
+         <div class="col-md-8">
+		  <h1>{{ dc|upper() }} ({{ lb_metadata[dc.upper()].city }})</h1>
+		  <div class="button">
+		<a href="#" class="btn btn-danger" id="expandall">Expand All</a>
+		<a href="#" class="btn btn-danger" id="collapseall">Collapse All</a>
+	  </div>
+	 <!-- /.button code -->
+	  
+	  <!-- error message -->
+		  <h3 id="subtitle"> Virtual IP Configurations </h3>
+	  
+	  {% if lb_info == {} or lb_info.service_groups == [] %}
+	  
+	 <div class="loop-comment">No virtual IP address configurations found, or load balancer is offline.</div>
+	  
+	  {% endif %}
+	<!-- /.error message -->
+	
+	<!-- accordion coding -->
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+	  
+		<!-- for loop to get VIP information -->
+		{% for item in lb_info.service_groups|sort(attribute='name') %}
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="heading{{ loop.index }}">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{ loop.index }}" aria-expanded="true"
+              aria-controls="collapse{{ loop.index }}"> 
+			  
+			  <!-- server health display (red or green) -->
+					<span class="health">
+						{% if item.status == "1" %}
+					
+							<img src="/static/images/greencircle.png">
+					
+						{% elif item.status == "0" or item.status == "9" %}
+					
+							<img src="/static/images/graycircle.png">
+							
+						{% else %}
+						
+							<img src="/static/images/redcircle.png">
+					
+						{% endif %}
+					</span>
+			  <!-- ./server health display (red or green) -->
+					
+				<span class="vip-name">{{ item.name }} </span>
+				<span class="vip-ip">{{ item.ip_address }}</span>
+			  </a>
+            </h4>
+          </div>
+		  
+          <div id="collapse{{ loop.index }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{ loop.index }}">
+            <div class="panel-body">
+			
+			<!-- for loop to call VIP port in drop menu -->
+			{% for vip_port, vip_servers in item.servers.iteritems() %}
+            <div class="row"> <div class="vip-port-header">  <h5 class="bg-custom" {% if loop.index == 1 %} style="margin-top: 0px;" {% endif %}>  :{{ vip_port }} </h5> </div> </div> 
+			<div class="row">
+					<div class="col-xs-1">
+						<div class="drop-titles">
+							<p> <span class="glyphicon glyphicon-ok"> </span></p>
+						</div>	
+					</div>
+					<div class="col-xs-7">
+						<div class="drop-titles">
+							<p> Server Name </p>
+						</div>
+					</div>
+					<div class="col-xs-2">
+						<div class="drop-titles">
+							<p> IP Address </p>
+						</div>
+					</div>
+					<div class="col-xs-1">
+						<div class="drop-titles">
+							<p> Port </p>
+						</div>
+					</div>
+					
+			</div>
+			
+			<!-- for loop calling server information -->
+			{% for ip_address, server_info in vip_servers.iteritems() %}
+			<div class="row {{ loop.cycle('odd', 'even') }} info-highlight">
+			<div class="col-xs-1">
+				<!-- if calling server health information -->
+				<span class="health">
+					{% if server_info.server_status == "1" %}
+					
+						<img src="/static/images/greencircle.png">
+					
+					{% elif server_info.server_status == "0" or server_info.server_status == "9" %}
+					
+						<img src="/static/images/graycircle.png">
+						
+					{% else %}
+					
+						<img src="/static/images/redcircle.png">
+					
+					{% endif %}
+				</span>
+				<!-- /.if calling server health information --> 
+			</div>
+			<div class="col-xs-7"> 
+				<span class="server-name">
+					{{server_info.server_hostname}} 
+				</span> 
+			</div> 
+			<div class="col-xs-2"> 
+				<span class="ip-address"> <span class="badge"> {{ ip_address }} </span> </span> 
+			</div> 
+			<div class="col-xs-1"> <span class="port"> <span class="badge"> {{ server_info.port }} </span> </span> 
+			</div>
+			<br>
+			</div>
+			{% endfor %}
+			<!-- /.for loop calling server information -->
+                        {% endfor %}
+						<!-- /.for loop to call VIP port in drop menu -->
+			
+			</div>
+          </div>
+        </div>
+		{% endfor %}
+		<!-- /.for loop to get VIP information -->
+						
+          </div>
+		  
+		  <!-- /.accordion coding -->
+       
+      </div>
+	  
+	  <!-- device information -->
+	  <div class="col-md-4">
+		
+		<div class="panel panel-danger">
+			<div class="panel-heading" id="right-panel">
+				<h2 class="panel-title"> <span class="glyphicon glyphicon-info-sign"> </span> <span class="right-title">Load Balancer Information </span> </h2>
+			</div>
+			<div class="panel-body device-info">
+			<div>
+			
+					<div class="row">
+						<span id="type" class="float-right device-info-column col-xs-5">
+							<p><strong>Device</strong></p>
+						</span>
+						<span class="device-info-column col-xs-7">
+							<p>{{ lb_metadata[dc.upper()].type }}</p>
+						</span>
+					</div>
+						
+					<div class="row">
+						<span class="float-right device-info-column col-xs-5">
+							<p><strong> FQDN </strong></p>
+						</span>
+						<span class="device-info-column col-xs-7">
+							<p>{{ lb_info.fqdn }}</p>
+						</span>
+					</div>
+					
+					<div class="row">
+						<span class="float-right device-info-column col-xs-5">
+							<p><strong>Hostname</strong></p>
+						</span>
+						<span class="device-info-column col-xs-7">
+							<p>{{ lb_info.hostname }}</p>
+						</span>
+					</div>
+					
+					<div class="row">
+						<span class="float-right device-info-column col-xs-5">
+							<p><strong>IP Address</strong></p>
+						</span>
+						<span class="device-info-column col-xs-7">
+							<p>{{ lb_ipaddress }}</p>
+						</span>
+					</div>
+					
+					<div class="row">
+						<span class="float-right device-info-column col-xs-5">
+							<p><strong>Software Version</strong></p>
+						</span>
+						<span class="device-info-column col-xs-7">
+							<p>{{ lb_info.software_version }}</p>
+						</span>
+					</div>
+					
+					<div class="row">
+						<span class="float-right device-info-column col-xs-5">
+							<p><strong>Last Updated</strong></p>
+						</span>
+						<span class="device-info-column col-xs-7">
+							<p>{{ lb_info.last_config_saved }}</p>
+						</span>
+					</div>
+					
+			</div>
+			</div>
+		</div>
+		<!-- legend -->
+		  <div class="row legend-container"> 
+                    <span class="legend">
+                      <p>
+                        <span class="legend-item"><img src="/static/images/greencircle.png"> Healthy </span>
+                        <span class="legend-item"><img src="/static/images/graycircle.png"> Disabled </span>
+                        <span class="legend-item"><img src="/static/images/redcircle.png"> Down </span>
+                      </p>
+                    </span>
+		  </div>
+		  <!-- /.legend -->
+		</div>
+		<!-- /.device information -->
+		
+		
+		</div>
+		
+	   </div>
+    </div>  
+	
+
+	   </div>
+    </div>
+  </div>
+  <hr />
+  <div class="container">
+  
+  <!-- footer code -->
+	<div class="footer">
+    <span class="custom-footer ng-binding ng-scope">&copy; - David Monarrez</span>
+  </div>
+  <!-- /.footer code -->
+  
+  </div>
+  <!-- /.container -->
+{% endblock %}
